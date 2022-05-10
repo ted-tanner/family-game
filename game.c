@@ -6,9 +6,7 @@ int main(int argc, char** argv)
     bool are_args_valid = true;
     
     if (argc >= 2)
-    {
         cards_file_path = argv[1];
-    }
 
     if (argc < 0 || !cards_file_path)
     {

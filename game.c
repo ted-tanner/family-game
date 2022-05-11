@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 
     if (argc < 0 || !cards_file_path)
     {
-        printf("No card file specified. Run the program agin specifying the cards file:\n");
+        printf("No card file specified. Run the program again specifying the cards file:\n");
         printf("%s [CARDS_FILE_PATH]\n", argv[0]);
         exit(1);
     }
@@ -33,23 +33,26 @@ int main(int argc, char** argv)
     while(true)
     {
         printf("\nPress ENTER when you are ready for a card.\n");
-        getc(stdin);
+        char c = 0;
+        do
+            c = getc(stdin);
+        while (c != '\n');
 
         Card card = choose_card(cards);
-        printf("-----------------------------------------------------------------\n");
-        printf("You will have %d seconds to complete the folling prompt prompt:\n\n", card.seconds);
+        printf("---------------------------------------------------------------\n");
+        printf("You will have %d seconds to complete the following prompt:\n\n", card.seconds);
 
         printf(ASCII_BOLD_ITALIC);
         printf("%s\n", cards.prompt_buf + card.prompt_offset);
         printf(ASCII_CLEAR_FORMATTING);
-        printf("-----------------------------------------------------------------\n\n\n");
+        printf("---------------------------------------------------------------\n\n\n");
 
         printf("Get ready...\n");
 
         countdown(COUNTDOWN_SECS);
         signal(SIGINT, ingame_sigint_handler);
-        
-        printf("\nGo!\n");
+
+        printf("\nGO!\n");
         
         countdown(card.seconds);
         signal(SIGINT, ingame_sigint_handler);

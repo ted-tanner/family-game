@@ -1,69 +1,6 @@
 #include "game.h"
 
-int main(int argc, char** argv)
-{
-    char* cards_file_path = 0;
-    bool are_args_valid = true;
-    
-    if (argc >= 2)
-        cards_file_path = argv[1];
-
-    if (argc < 0 || !cards_file_path)
-    {
-        printf("No card file specified. Run the program again specifying the cards file:\n");
-        printf("%s [CARDS_FILE_PATH]\n", argv[0]);
-        exit(1);
-    }
-
-    FILE* cards_file = fopen(cards_file_path, "r");
-    if (!cards_file)
-    {
-        printf("Failed to open cards file '%s'\n", cards_file_path);
-        exit(1);
-    }
-
-    CardList cards = parse_cards_file(cards_file);
-    fclose(cards_file);
-
-    signal(SIGINT, ingame_sigint_handler);
-
-    printf("Welcome to The Game. Let's begin.\n");
-    srand(time(0));
-    
-    while(true)
-    {
-        printf("\nPress ENTER when you are ready for a card.\n");
-        char c = 0;
-        do
-            c = getc(stdin);
-        while (c != '\n');
-
-        Card card = choose_card(cards);
-        printf("---------------------------------------------------------------\n");
-        printf("You will have %d seconds to complete the following prompt:\n\n", card.seconds);
-
-        printf(ASCII_BOLD_ITALIC);
-        printf("%s\n", cards.prompt_buf + card.prompt_offset);
-        printf(ASCII_CLEAR_FORMATTING);
-        printf("---------------------------------------------------------------\n\n\n");
-
-        printf("Get ready...\n");
-
-        countdown(COUNTDOWN_SECS);
-        signal(SIGINT, ingame_sigint_handler);
-
-        printf("\nGO!\n");
-        
-        countdown(card.seconds);
-        signal(SIGINT, ingame_sigint_handler);
-
-        printf("\nTIMER DONE!\n");
-    }
-        
-    free_card_list(cards);
-
-    return 0;
-}
+static GameState game_state = {0};
 
 CardList parse_cards_file(FILE* file)
 {
@@ -90,7 +27,7 @@ CardList parse_cards_file(FILE* file)
 
     // Add a byte for terminating 0
     ++max_line_length;
-    
+
     char* prompt_buffer = malloc(max_line_length * line_count);
     Card* card_buffer = malloc(sizeof(Card) * line_count);
 
@@ -212,27 +149,59 @@ Card choose_card(CardList cards)
     return *(cards.card_buf + rand_card_index);
 }
 
-static bool countdown_continue = false;
+static void countdown_sigint_handler(int num)
+{
+    game_state.countdown_continue = false;
+}
 
-void countdown(int32_t seconds)
+void countdown(Canvas* canvas, int32_t time, char* message)
 {
     const int64_t checks_per_second = 60;
-        
+    
     signal(SIGINT, countdown_sigint_handler);
 
-    printf(ASCII_QUIET);
-    printf("Press Ctrl + C to stop the timer\n\n");
-    printf(ASCII_CLEAR_FORMATTING);
+    uint16_t canvas_center_row = canvas->height / 2;
+    uint16_t canvas_center_col = canvas->width / 2;
 
-    countdown_continue = true;
-    for (uint8_t check_count = 0; seconds >= 0 && countdown_continue; --check_count)
+    // Timer is in format 00:00, so offset is half of that lengthz
+    uint16_t timer_offset = canvas->width >= 3 ? 3 : 0;
+
+    char timer_stop_message[] = "Press Ctrl + C to stop the timer";
+    size_t timer_stop_message_offset = strlen(timer_stop_message) / 2;
+    if (canvas->width <= timer_stop_message_offset)
+        timer_stop_message_offset = 0;
+
+    int32_t seconds = time;
+
+    game_state.countdown_continue = true;
+    for (uint8_t check_count = 0; seconds >= 0 && game_state.countdown_continue; --check_count)
     {
+        // TODO: Account for the time it takes to execute the following block
         if (check_count == 0)
         {
+            canvas_clear_transitory(canvas);
+            
+            size_t message_offset = strlen(message) / 2 + 1;
+            if (canvas->width <= message_offset)
+                message_offset = 0;
+
+            canvas_printf_transitory(canvas, canvas_center_row, canvas_center_col - message_offset, message);
+            
             int32_t minutes = seconds / 60;
             int32_t second_less_minutes = seconds - (60 * minutes);
+            
+            canvas_printf_transitory(canvas,
+                                     canvas_center_row + 2,
+                                     canvas_center_col - timer_offset,
+                                     "%02d:%02d\n",
+                                     minutes, second_less_minutes);
 
-            printf("%02d:%02d\n", minutes, second_less_minutes);
+            canvas_printf_transitory(canvas,
+                                     canvas_center_row + 5,
+                                     canvas_center_col - timer_stop_message_offset,
+                                     timer_stop_message);
+
+            draw_canvas(canvas);
 
             --seconds;
             check_count = checks_per_second + 1;
@@ -242,25 +211,37 @@ void countdown(int32_t seconds)
     }
 }
 
-void countdown_sigint_handler(int num)
+static void ingame_sigint_handler(int num)
 {
-    countdown_continue = false;
-}
-
-static bool awaiting_response_to_quit = false;
-
-void ingame_sigint_handler(int num)
-{
-    if (!awaiting_response_to_quit)
+    if (!game_state.awaiting_response_to_quit)
     {
-        awaiting_response_to_quit = true;
+        game_state.awaiting_response_to_quit = true;
+
+        printf(ASCII_CLEAR);
+        printf(ASCII_RESET_CURSOR);
         
-        printf("\nAre you sure you want to quit? (y/n) ");
+        printf("Are you sure you want to quit? (y/n) ");
         char response = getc(stdin);
 
         if (response == 'y')
+        {
+            if (game_state.shutdown_hook != 0)
+                (*game_state.shutdown_hook)();
             exit(0);
+        }
 
-        awaiting_response_to_quit = false;
+        printf("\nPress ENTER when you are ready for a card.\n");
+
+        game_state.awaiting_response_to_quit = false;
     }
+}
+
+void set_ingame_sigint_handler()
+{
+    signal(SIGINT, ingame_sigint_handler);
+}
+
+void set_shutdown_hook(void (*func)())
+{
+    game_state.shutdown_hook = func;
 }

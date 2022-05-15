@@ -6,15 +6,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
-#define ASCII_BOLD_ITALIC "\033[3m\033[1m"
-#define ASCII_QUIET "\033[2m"
-#define ASCII_CLEAR_FORMATTING "\033[0m"
+#include "bashgraphics.h"
 
 #define COUNTDOWN_SECS 4
+
+#define ASCII_CLEAR "\033[2J"
+#define ASCII_RESET_CURSOR "\033[H"
 
 typedef struct _card {
     size_t prompt_offset;
@@ -28,12 +28,17 @@ typedef struct _card_list {
     int64_t card_count;
 } CardList;
 
+typedef struct {
+    bool countdown_continue;
+    bool awaiting_response_to_quit;
+    void (*shutdown_hook)();
+} GameState;
+
 CardList parse_cards_file(FILE* file);
 void free_card_list(CardList list);
 Card choose_card(CardList cards);
-void countdown(int32_t time);
-
-void ingame_sigint_handler(int num);
-void countdown_sigint_handler(int num);
+void countdown(Canvas* canvas, int32_t time, char* message);
+void set_ingame_sigint_handler();
+void set_shutdown_hook(void (*func)());
 
 #endif

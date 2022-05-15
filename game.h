@@ -16,21 +16,23 @@
 #define ASCII_CLEAR "\033[2J"
 #define ASCII_RESET_CURSOR "\033[H"
 
-typedef struct _card {
+typedef struct {
     size_t prompt_offset;
     int32_t seconds;
 } Card;
 
-typedef struct _card_list {
+typedef struct {
     Card* card_buf;
     char* prompt_buf;
     int64_t prompt_buf_size;
+    int64_t* rand_card_order_arr;
     int64_t card_count;
 } CardList;
 
 typedef struct {
     bool countdown_continue;
     bool awaiting_response_to_quit;
+    int64_t current_card;
     void (*shutdown_hook)();
 } GameState;
 

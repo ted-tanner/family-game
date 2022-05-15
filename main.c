@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
 
 #include "bashgraphics.h"
 #include "game.h"
@@ -48,7 +47,6 @@ int main(int argc, char** argv)
     set_shutdown_hook(&shutdown_hook);
 
     printf("Welcome to The Game. Let's begin.\n\n");
-    srand(time(0));
 
     bool is_first_loop = true;
     while(true)

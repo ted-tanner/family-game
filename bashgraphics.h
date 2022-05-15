@@ -9,7 +9,7 @@
 #define ASCII_CLEAR "\033[2J"
 #define ASCII_RESET_CURSOR "\033[H"
 
-#define CANVAS_PRINTF_BUF_SIZE 1024
+#define CANVAS_PRINTF_BUF_SIZE 2048
 
 typedef struct {
     uint16_t width;

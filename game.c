@@ -6,7 +6,8 @@ CardList parse_cards_file(FILE* file)
 {
     // Find longest line and count number of lines
     // NOTE: Memory footprint can be shrunk by only setting the buffer to the longest
-    //       length of text not in a comment and before a tilde (~)
+    //       length of text not in a comment and before a tilde (~). Currently, the
+    //       length includes long comments and what comes after the tilde.
     int64_t line_count = 0;
     int32_t max_line_length = 0;
     int32_t curr_line_length = 0;
@@ -18,10 +19,15 @@ CardList parse_cards_file(FILE* file)
 
             if (curr_line_length > max_line_length)
                 max_line_length = curr_line_length;
+            else if (curr_line_length == 0)
+                --line_count;
 
             curr_line_length = -1;
         }
     }
+
+    // Account for the last line
+    ++line_count;
     
     rewind(file);
 
@@ -44,8 +50,9 @@ CardList parse_cards_file(FILE* file)
 
     bool hit_tilde = false;
     int64_t tilde_pos_in_line = 0;
- 
-    for(char curr = fgetc(file); curr != EOF; curr = fgetc(file), ++pos_in_line)
+
+    bool eof_reached = false;
+    for(char curr = fgetc(file); !eof_reached; curr = fgetc(file), ++pos_in_line)
     {
         if (curr == '#' && pos_in_line == 0)
         {
@@ -63,8 +70,11 @@ CardList parse_cards_file(FILE* file)
 
             continue;
         }
-        else if (curr == '\n')
+        else if (curr == '\n' || curr == EOF)
         {
+            if (curr == EOF)
+                eof_reached = true;
+            
             *(prompt_buffer + max_line_length * line_number + pos_in_line) = 0;
                         
             if (!hit_tilde)
@@ -127,10 +137,35 @@ end_of_outer_loop:
 
     *(prompt_buffer + max_line_length * line_number + pos_in_line) = 0;
 
+    int64_t* rand_card_order_arr = malloc(line_count * sizeof(int64_t));
+
+    if (!rand_card_order_arr)
+    {
+        printf("malloc failure\n");
+        exit(1);
+    }
+
+    for (int64_t i = 0; i < line_count; ++i)
+        rand_card_order_arr[i] = i;
+    
+    // Shuffle the cards
+    srand(time(0));
+    for (int64_t i = 0; i < line_count * 10; ++i)
+    {
+        // TODO: Implement a Mersenne Twister random number generator to get a better random
+        int64_t rand_card_index1 = rand() % line_count;
+        int64_t rand_card_index2 = rand() % line_count;
+
+        int64_t temp = rand_card_order_arr[rand_card_index1];
+        rand_card_order_arr[rand_card_index1] = rand_card_order_arr[rand_card_index2];
+        rand_card_order_arr[rand_card_index2] = temp;
+    }
+
     CardList cards = {
         .card_buf = realloc(card_buffer, sizeof(Card) * line_count),
         .prompt_buf = realloc(prompt_buffer, max_line_length * line_count),
         .prompt_buf_size = max_line_length,
+        .rand_card_order_arr = rand_card_order_arr,
         .card_count = line_count,
     };
     
@@ -141,12 +176,17 @@ void free_card_list(CardList list)
 {
     free(list.card_buf);
     free(list.prompt_buf);
+    free(list.rand_card_order_arr);
 }
 
 Card choose_card(CardList cards)
 {
-    int32_t rand_card_index = (rand() ^ time(0)) % cards.card_count;
-    return *(cards.card_buf + rand_card_index);
+    if (game_state.current_card == cards.card_count)
+        game_state.current_card = 0;
+
+    int64_t card_index = cards.rand_card_order_arr[game_state.current_card++];
+    
+    return cards.card_buf[card_index];
 }
 
 static void countdown_sigint_handler(int num)

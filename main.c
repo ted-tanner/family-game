@@ -66,6 +66,13 @@ int main(int argc, char** argv)
             response = getc(stdin);
         while (response != '\n');
 
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &console_size);
+        if (console_size.ws_col != canvas.width || console_size.ws_row != canvas.height)
+        {
+            free_canvas(&canvas);
+            canvas = create_canvas(console_size.ws_col, console_size.ws_row);
+        }
+
         Card card = choose_card(cards);
         
         printf(ASCII_CLEAR);

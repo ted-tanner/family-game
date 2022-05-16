@@ -30,7 +30,6 @@ void free_canvas(Canvas* canvas)
     free(canvas->static_buf);
 }
 
-// TODO: Handle wrap arounds
 void draw_canvas(Canvas* canvas)
 {
     printf(ASCII_CLEAR);
@@ -55,6 +54,8 @@ void draw_canvas(Canvas* canvas)
         {
             char c = *(canvas->static_buf + (row * canvas->width) + col);
 
+            // If there is something underneath the static buffer, don't overwrite it if
+            // the slot in the static buffer is clear
             if (c != 0)
                 putc(c, stdout);
         }

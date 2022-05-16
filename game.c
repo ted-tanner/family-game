@@ -19,8 +19,6 @@ CardList parse_cards_file(FILE* file)
 
             if (curr_line_length > max_line_length)
                 max_line_length = curr_line_length;
-            else if (curr_line_length == 0)
-                --line_count;
 
             curr_line_length = -1;
         }

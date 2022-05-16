@@ -117,8 +117,7 @@ int main(int argc, char** argv)
         size_t prompt_extra_lines = prompt_len / canvas.width;
 
         canvas_printf_static(&canvas, 3, 0, ASCII_BOLD_ITALIC);
-        canvas_printf_static(&canvas, 4, 0, "%s", cards.prompt_buf + card.prompt_offset);
-        canvas_printf_static(&canvas, 5, 0, ASCII_CLEAR_FORMATTING);
+        canvas_printf_static(&canvas, 4, 0, "%s%s", cards.prompt_buf + card.prompt_offset, ASCII_CLEAR_FORMATTING);
 
         for (size_t i = 0; i < canvas.width; ++i)
             canvas_putc_static(&canvas, '-', 6 + prompt_extra_lines, i);

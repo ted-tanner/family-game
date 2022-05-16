@@ -236,10 +236,12 @@ void countdown(Canvas* canvas, int32_t time, char* message)
                                      "%02d:%02d\n",
                                      minutes, second_less_minutes);
 
+            canvas_printf_transitory(canvas, canvas_center_row + 4, 0, ASCII_QUIET);
             canvas_printf_transitory(canvas,
                                      canvas_center_row + 5,
                                      canvas_center_col - timer_stop_message_offset,
                                      timer_stop_message);
+            canvas_printf_transitory(canvas, canvas_center_row + 6, 0, ASCII_CLEAR_FORMATTING);
 
             draw_canvas(canvas);
 
@@ -259,8 +261,11 @@ static void ingame_sigint_handler(int num)
 
         printf(ASCII_CLEAR);
         printf(ASCII_RESET_CURSOR);
-        
+
+        printf(ASCII_BOLD_ITALIC);
         printf("Are you sure you want to quit? (y/n) ");
+        printf(ASCII_CLEAR_FORMATTING);
+                
         char response = getc(stdin);
 
         if (response == 'y')

@@ -16,6 +16,10 @@
 #define ASCII_CLEAR "\033[2J"
 #define ASCII_RESET_CURSOR "\033[H"
 
+#define ASCII_BOLD_ITALIC "\033[3m\033[1m"
+#define ASCII_QUIET "\033[2m"
+#define ASCII_CLEAR_FORMATTING "\033[0m"
+
 typedef struct {
     size_t prompt_offset;
     int32_t seconds;

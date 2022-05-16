@@ -59,10 +59,9 @@ int main(int argc, char** argv)
 
         printf("Press ENTER when you are ready for a card.\n");
 
-        char response = 0;
-        do
-            response = getc(stdin);
-        while (response != '\n');
+        // Clear stdin and await response
+        fseek(stdin, 0, SEEK_END);
+        while (getc(stdin) != '\n');
 
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &console_size);
         if (console_size.ws_col != canvas.width || console_size.ws_row != canvas.height)
@@ -81,15 +80,47 @@ int main(int argc, char** argv)
         for (size_t i = 0; i < canvas.width; ++i)
             canvas_putc_static(&canvas, '-', 0, i);
 
-        canvas_printf_static(&canvas, 1, 0, "You will have %d seconds to complete the following prompt:", card.seconds);
+        int32_t mins = card.seconds / 60;
+        int32_t secs = card.seconds - mins * 60;
+
+        if (mins == 0)
+        {
+            canvas_printf_static(&canvas,
+                                 2,
+                                 0,
+                                 "You will have %d seconds to complete the following prompt:",
+                                 secs);
+        }
+        else
+        {
+            if (secs == 0)
+            {
+                canvas_printf_static(&canvas,
+                                     2,
+                                     0,
+                                     "You will have %d %s to complete the following prompt:",
+                                     mins, mins > 1 ? "minutes" : "minute");
+            }
+            else
+            {
+                canvas_printf_static(&canvas,
+                                     2,
+                                     0,
+                                     "You will have %d minutes, %d seconds to complete the following prompt:",
+                                     mins, secs);
+            }
+        }
+
 
         size_t prompt_len = strlen(cards.prompt_buf + card.prompt_offset);
         size_t prompt_extra_lines = prompt_len / canvas.width;
-        
-        canvas_printf_static(&canvas, 3, 0, "%s", cards.prompt_buf + card.prompt_offset);
+
+        canvas_printf_static(&canvas, 3, 0, ASCII_BOLD_ITALIC);
+        canvas_printf_static(&canvas, 4, 0, "%s", cards.prompt_buf + card.prompt_offset);
+        canvas_printf_static(&canvas, 5, 0, ASCII_CLEAR_FORMATTING);
 
         for (size_t i = 0; i < canvas.width; ++i)
-            canvas_putc_static(&canvas, '-', 4 + prompt_extra_lines, i);
+            canvas_putc_static(&canvas, '-', 6 + prompt_extra_lines, i);
 
         draw_canvas(&canvas);
 

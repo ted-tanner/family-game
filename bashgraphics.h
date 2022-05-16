@@ -43,8 +43,4 @@ void draw_canvas(Canvas* canvas);
 #define canvas_clear_static(canvas) memset((canvas)->static_buf, 0, (canvas)->width * (canvas)->height);
 #define canvas_clear_transitory(canvas) memset((canvas)->transient_buf, ' ', (canvas)->width * (canvas)->height);
 
-#define canvas_make_static_row_opaque(canvas, row) memset((canvas)->static_buf + (row) * (canvas)->width, \
-                                                          ' ',          \
-                                                          (canvas)->width);
-
 #endif

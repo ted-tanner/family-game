@@ -172,21 +172,21 @@ end_of_outer_loop:
     return cards;
 }
 
-void free_card_list(CardList list)
+void free_card_list(CardList* list)
 {
-    free(list.card_buf);
-    free(list.prompt_buf);
-    free(list.rand_card_order_arr);
+    free(list->card_buf);
+    free(list->prompt_buf);
+    free(list->rand_card_order_arr);
 }
 
-Card choose_card(CardList cards)
+Card choose_card(CardList* cards)
 {
-    if (game_state.current_card == cards.card_count)
+    if (game_state.current_card == cards->card_count)
         game_state.current_card = 0;
 
-    int64_t card_index = cards.rand_card_order_arr[game_state.current_card++];
+    int64_t card_index = cards->rand_card_order_arr[game_state.current_card++];
     
-    return cards.card_buf[card_index];
+    return cards->card_buf[card_index];
 }
 
 static void countdown_sigint_handler(int num)

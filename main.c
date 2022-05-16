@@ -70,7 +70,7 @@ int main(int argc, char** argv)
             canvas = create_canvas(console_size.ws_col, console_size.ws_row);
         }
 
-        Card card = choose_card(cards);
+        Card card = choose_card(&cards);
         
         printf(ASCII_CLEAR);
         printf(ASCII_RESET_CURSOR);
@@ -136,7 +136,7 @@ int main(int argc, char** argv)
     // These frees will never be reached, but it is a good reminder that this is memory that has
     // been allocated
 
-    free_card_list(cards);
+    free_card_list(&cards);
     free_canvas(&canvas);
 
     return 0;

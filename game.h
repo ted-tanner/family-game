@@ -41,8 +41,8 @@ typedef struct {
 } GameState;
 
 CardList parse_cards_file(FILE* file);
-void free_card_list(CardList list);
-Card choose_card(CardList cards);
+void free_card_list(CardList* list);
+Card choose_card(CardList* cards);
 void countdown(Canvas* canvas, int32_t time, char* message);
 void set_ingame_sigint_handler();
 void set_shutdown_hook(void (*func)());

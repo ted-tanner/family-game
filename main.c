@@ -88,8 +88,8 @@ int main(int argc, char** argv)
             canvas_printf_static(&canvas,
                                  2,
                                  0,
-                                 "You will have %d seconds to complete the following prompt:",
-                                 secs);
+                                 "You will have %d %s to complete the following prompt:",
+                                 secs, secs == 1 ? "second" : "seconds");
         }
         else
         {
@@ -99,15 +99,16 @@ int main(int argc, char** argv)
                                      2,
                                      0,
                                      "You will have %d %s to complete the following prompt:",
-                                     mins, mins > 1 ? "minutes" : "minute");
+                                     mins, mins == 1 ? "minute" : "minutes");
             }
             else
             {
                 canvas_printf_static(&canvas,
                                      2,
                                      0,
-                                     "You will have %d minutes, %d seconds to complete the following prompt:",
-                                     mins, secs);
+                                     "You will have %d %s, %d %s to complete the following prompt:",
+                                     mins, mins == 1 ? "minute" : "minutes",
+                                     secs, secs == 1 ? "second" : "seconds");
             }
         }
 
